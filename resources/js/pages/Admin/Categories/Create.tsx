@@ -3,36 +3,45 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { AlertCircle, ArrowLeft, ImageIcon, Lock, Mail, Phone, Save, Trash2, Upload, User } from 'lucide-react';
+import { AlertCircle, ArrowLeft, FileText, ImageIcon, Save, TagIcon, Trash2, Upload, User } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: 'dashboard' },
-    { title: 'Admins', href: route('admin.admins.index') },
-    { title: 'Edit Admin', href: '' },
+    { title: 'categories', href: route('admin.categories.index') },
+    { title: 'Create Category', href: '' },
 ];
 
-interface Admin {
+interface Category {
     id: number;
     name: string;
-    email: string;
-    phone: string;
-    avatar: string;
+    slug: string;
+    description: string;
+    parent_id: number | null;
+    image: string;
+    created_at: string;
+    updated_at: string;
 }
 
-export default function Edit({ admin }: { admin: Admin }) {
+interface CategoryWithPath extends Category {
+    path: string;
+    level: number;
+}
+
+export default function Create({ categories }: { categories: CategoryWithPath[] }) {
     const { data, setData, post, processing, errors } = useForm({
-        _method: 'put',
-        name: admin.name || '',
-        email: admin.email || '',
-        phone: admin.phone || '',
-        avatar: null as File | null,
+        name: '',
+        description: '',
+        parent_id: '',
+        image: null as File | null,
     });
 
-    const [imagePreview, setImagePreview] = useState<string | null>(admin.avatar || null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -41,9 +50,12 @@ export default function Edit({ admin }: { admin: Admin }) {
         e.preventDefault();
         setIsUploading(true);
 
-        post(route('admin.admins.update', admin.id), {
+        const normalizeParentId = data.parent_id === 'none' ? null : Number(data.parent_id);
+
+        post(route('admin.categories.store'), {
             data: {
                 ...data,
+                parent_id: normalizeParentId,
             },
             preserveScroll: true,
             onProgress: (progress) => {
@@ -65,7 +77,7 @@ export default function Edit({ admin }: { admin: Admin }) {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
         if (file) {
-            setData('avatar', file);
+            setData('image', file);
             const reader = new FileReader();
             reader.onload = (e) => {
                 setImagePreview(e.target?.result as string);
@@ -75,7 +87,7 @@ export default function Edit({ admin }: { admin: Admin }) {
     };
 
     const clearImage = () => {
-        setData('avatar', null);
+        setData('image', null);
         setImagePreview(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -84,7 +96,7 @@ export default function Edit({ admin }: { admin: Admin }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Edit Admin" />
+            <Head title="Create Category" />
             {/* <div className="fron-gray-50 min-h-screen bg-gradient-to-br to-gray-100 p-4 sm:p-6 lg:p-8 dark:from-gray-900 dark:to-gray-800"> */}
                 <Card className="overflow-hidden border-none bg-white shadow-xl dark:bg-gray-800">
                     <CardHeader>
@@ -97,12 +109,12 @@ export default function Edit({ admin }: { admin: Admin }) {
                                                 <User className="text-primary dark:text-primary-light" size={24} />
                                             </div>
                                             <div>
-                                                <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Edit Admin</h1>
-                                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">Edit admin</p>
+                                                <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Create Category</h1>
+                                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">Add new category</p>
                                             </div>
                                         </div>
 
-                                        <Link href={route('admin.admins.index')}>
+                                        <Link href={route('admin.categories.index')}>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -123,8 +135,8 @@ export default function Edit({ admin }: { admin: Admin }) {
                                                     htmlFor="name"
                                                     className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >
-                                                    <User size={14} className="text-primary dark:text-primary-light" />
-                                                    Name
+                                                    <TagIcon size={14} className="text-primary dark:text-primary-light" />
+                                                    Category Name
                                                 </Label>
 
                                                 <div className="group relative">
@@ -138,7 +150,7 @@ export default function Edit({ admin }: { admin: Admin }) {
                                                         required
                                                         autoFocus
                                                     />
-                                                    <User
+                                                    <TagIcon
                                                         size={18}
                                                         className="group-hover:text-primary dark:group-hover:text-primary-light absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 transition-colors dark:text-gray-500"
                                                     />
@@ -154,68 +166,66 @@ export default function Edit({ admin }: { admin: Admin }) {
 
                                             <div className="space-y-2">
                                                 <Label
-                                                    htmlFor="name"
+                                                    htmlFor="description"
                                                     className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >
-                                                    <Mail size={14} className="text-primary dark:text-primary-light" />
-                                                    Email
+                                                    <FileText size={14} className="text-primary dark:text-primary-light" />
+                                                    Description
                                                 </Label>
 
-                                                <div className="group relative">
-                                                    <Input
-                                                        id="email"
-                                                        name="email"
-                                                        value={data.email}
-                                                        onChange={(e) => setData('email', e.target.value)}
-                                                        className="focus:border-primary focus:ring-primary/20 dark:focus:border-primary-light dark:focus:ring-primary-light/20 h-12 w-full rounded-lg border border-gray-200 bg-white/80 pl-10 text-base text-gray-900 shadow-sm backdrop-blur-sm transition-all group-hover:border-gray-300 focus:ring-2 dark:border-gray-600 dark:bg-gray-800/80 dark:text-gray-100 dark:group-hover:border-gray-500"
-                                                        placeholder="Enter email"
-                                                        required
-                                                        autoFocus
-                                                    />
-                                                    <Mail
-                                                        size={18}
-                                                        className="group-hover:text-primary dark:group-hover:text-primary-light absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 transition-colors dark:text-gray-500"
-                                                    />
-                                                </div>
+                                                <Textarea
+                                                    id="description"
+                                                    name="description"
+                                                    value={data.description}
+                                                    onChange={(e) => setData('description', e.target.value)}
+                                                    className="focus:border-primary focus:ring-primary/20 dark:focus:border-primary-light dark:focus:ring-primary-light/20 min-h-24 w-full rounded-lg border border-gray-200 bg-white/80 p-4 text-base text-gray-900 shadow-sm backdrop-blur-sm transition-all focus:ring-2 dark:border-gray-600 dark:bg-gray-800/80 dark:text-gray-100"
+                                                    placeholder="Enter category description"
+                                                />
 
-                                                {errors.email && (
+                                                {errors.description && (
                                                     <div className="mt-2 flex items-center gap-2 rounded-md bg-red-50 p-2 text-sm text-red-500 dark:bg-red-900/20 dark:text-red-400">
                                                         <AlertCircle size={14} />
-                                                        <span>{errors.email}</span>
+                                                        <span>{errors.description}</span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             <div className="space-y-2">
                                                 <Label
-                                                    htmlFor="name"
+                                                    htmlFor="parent_id"
                                                     className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >
-                                                    <Phone size={14} className="text-primary dark:text-primary-light" />
-                                                    Phone
+                                                    <TagIcon size={14} className="text-primary dark:text-primary-light" />
+                                                    Parent Category
                                                 </Label>
 
-                                                <div className="group relative">
-                                                    <Input
-                                                        id="phone"
-                                                        name="phone"
-                                                        value={data.phone}
-                                                        onChange={(e) => setData('phone', e.target.value)}
-                                                        className="focus:border-primary focus:ring-primary/20 dark:focus:border-primary-light dark:focus:ring-primary-light/20 h-12 w-full rounded-lg border border-gray-200 bg-white/80 pl-10 text-base text-gray-900 shadow-sm backdrop-blur-sm transition-all group-hover:border-gray-300 focus:ring-2 dark:border-gray-600 dark:bg-gray-800/80 dark:text-gray-100 dark:group-hover:border-gray-500"
-                                                        placeholder="Enter phone"
-                                                        required
-                                                        autoFocus
-                                                    />
-                                                    <Phone
-                                                        size={18}
-                                                        className="group-hover:text-primary dark:group-hover:text-primary-light absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 transition-colors dark:text-gray-500"
-                                                    />
-                                                </div>
-
-                                                {errors.phone && (
+                                                <Select value={data.parent_id ?? 'none'} onValueChange={(value) => setData('parent_id', value)}>
+                                                    <SelectTrigger className="h-12 w-full">
+                                                        <SelectValue placeholder="Select parent category" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none" className="text-gray-500">
+                                                            No Parent Category
+                                                        </SelectItem>
+                                                        {categories &&
+                                                            categories.map((category) => (
+                                                                <SelectItem key={category.id} value={String(category.id)} className="pl-2">
+                                                                    <span
+                                                                        className="inline-block"
+                                                                        style={{
+                                                                            marginLeft: `${category.level * 12}px`,
+                                                                        }}
+                                                                    >
+                                                                        {category.level > 0 && '└─'} {category.name}
+                                                                    </span>
+                                                                </SelectItem>
+                                                            ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {errors.parent_id && (
                                                     <div className="mt-2 flex items-center gap-2 rounded-md bg-red-50 p-2 text-sm text-red-500 dark:bg-red-900/20 dark:text-red-400">
                                                         <AlertCircle size={14} />
-                                                        <span>{errors.phone}</span>
+                                                        <span>{errors.parent_id}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -226,7 +236,7 @@ export default function Edit({ admin }: { admin: Admin }) {
                                                     className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >
                                                     <ImageIcon size={14} className="text-primary dark:text-primary-light" />
-                                                    Admin Avatar
+                                                    Category Image
                                                 </Label>
 
                                                 <div className="group relative">
@@ -270,24 +280,24 @@ export default function Edit({ admin }: { admin: Admin }) {
                                                         ref={fileInputRef}
                                                         type="file"
                                                         id="image"
-                                                        name="avatar"
+                                                        name="image"
                                                         className="hidden"
                                                         accept="image/*"
                                                         onChange={handleFileChange}
                                                     />
                                                 </div>
 
-                                                {isUploading && data.avatar && (
+                                                {isUploading && data.image && (
                                                     <div className="mt-2">
                                                         <Progress value={uploadProgress} className="h-2 w-full bg-gray-200 dark:bg-gray-700" />
                                                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{uploadProgress}% uploaded</p>
                                                     </div>
                                                 )}
 
-                                                {errors.avatar && (
+                                                {errors.image && (
                                                     <div className="mt-2 flex items-center gap-2 rounded-md bg-red-50 p-2 text-sm text-red-500 dark:bg-red-900/20 dark:text-red-400">
                                                         <AlertCircle size={14} />
-                                                        <span>{errors.avatar}</span>
+                                                        <span>{errors.image}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -295,7 +305,7 @@ export default function Edit({ admin }: { admin: Admin }) {
                                             <div className="pt-4">
                                                 <Button type="submit" className="w-full" disabled={processing}>
                                                     <Save size={16} className="mr-2" />
-                                                    Save Admin
+                                                    Save Category
                                                 </Button>
                                             </div>
                                         </div>

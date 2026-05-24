@@ -4,23 +4,28 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, User, Users } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, TagIcon, User, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        url: 'admin/dashboard',
+        href: 'admin/dashboard',
         icon: LayoutGrid,
     },
     {
+        title: 'Categories',
+        href: '/admin/categories',
+        icon: TagIcon,
+    },
+    {
         title: 'Users',
-        url: 'admin/users',
+        href: '/admin/users',
         icon: Users,
     },
     {
         title: 'Admin',
-        url: 'admin/admins',
+        href: '/admin/admins',
         icon: User,
     },
 ];
@@ -28,12 +33,12 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
+        href: 'https://github.com/laravel/react-starter-kit',
         icon: Folder,
     },
     {
         title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
+        href: 'https://laravel.com/docs/starter-kits',
         icon: BookOpen,
     },
 ];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin;
 use App\Helpers\ImageUploader;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminStoreRequest;
+use App\Http\Requests\AdminUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -70,7 +71,7 @@ class AdminController extends Controller
         $data['role'] = 'admin';
         $data['username'] = $data['name'];
         $data['status'] = 'active';
-        // dd($data);
+
         User::create($data);
         return redirect()->route('admin.admins.index')->with('success', 'Admin created successfully.');
     }

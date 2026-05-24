@@ -11,7 +11,7 @@ class ImageUploader
 {
     public static function uploadImage(UploadedFile $image, string $folder, int $maxWidth = 1200): string
     {
-        // try {
+        try {
             $filename = uniqid() . '_' . time() . '.webp';
             $folder = trim($folder, '/');
             $storagePath = "uploads/{$folder}/{$filename}";
@@ -28,12 +28,12 @@ class ImageUploader
 
             Storage::disk('public')->put($storagePath, $encodedImage->toString());
             $publicPath = str_replace('public/', '/storage/', $storagePath);
-// dd($publicPath);
+
             return $publicPath;
-        // } catch (\Exception $e) {
-        //     report($e);
-        //     return '';
-        // }
+        } catch (\Exception $e) {
+            report($e);
+            return '';
+        }
     }
 
     public static function deleteImage($path): bool
