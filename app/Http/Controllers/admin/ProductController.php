@@ -68,7 +68,7 @@ class ProductController extends Controller
     {
         $data = $request->only('name', 'description', 'status', 'brand_id', 'category_id', 'price', 'quantity', 'barcode', 'sku');
         $product = Product::create($data);
-        return redirect()->route('admin.products.edit', $product->id)->with('success', 'Product created successfully.');
+        return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
 
     public function edit($id): Response
